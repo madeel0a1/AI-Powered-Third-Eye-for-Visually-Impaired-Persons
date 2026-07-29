@@ -6,13 +6,7 @@
 
 ---
 
-## 🚀 Live Demo
 
-**[Try it here →](#)** *(add your Streamlit Cloud link after deploying)*
-
-No install needed — open the link, upload a photo, get a spoken description back.
-
----
 
 ## 💡 The Problem
 
