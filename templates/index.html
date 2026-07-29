@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Third Eye — AI Assistant for Visually Impaired Persons</title>
+<style>
+  :root {
+    --bg: #12151c;
+    --panel: #1b1f29;
+    --panel-border: #2a3040;
+    --text: #eef1f6;
+    --muted: #9aa4b8;
+    --accent: #4fd1a5;
+    --accent-dim: #2f7a5f;
+    --warn: #e3b341;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(circle at 20% -10%, #1c2333 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: "Segoe UI", "Noto Sans", system-ui, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px 80px;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 720px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .eye-mark {
+    font-size: 40px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 28px;
+    margin: 0 0 6px;
+    letter-spacing: 0.2px;
+  }
+
+  header p {
+    color: var(--muted);
+    margin: 0;
+    font-size: 15px;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+
+  #drop-zone {
+    border: 2px dashed var(--panel-border);
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  #drop-zone:hover,
+  #drop-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(79, 209, 165, 0.06);
+  }
+
+  #drop-zone svg {
+    width: 42px;
+    height: 42px;
+    stroke: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  #drop-zone .primary {
+    font-size: 16px;
+    color: var(--text);
+    margin: 0 0 4px;
+  }
+
+  #drop-zone .secondary {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  input[type="file"] { display: none; }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 18px;
+    min-height: 20px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--panel-border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: none;
+  }
+
+  .spinner.active { display: inline-block; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #result-card { display: none; }
+
+  #preview {
+    width: 100%;
+    max-height: 340px;
+    object-fit: contain;
+    border-radius: 10px;
+    background: #0b0d12;
+    display: block;
+    margin-bottom: 20px;
+  }
+
+  .report-label {
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--accent);
+    margin: 0 0 8px;
+    font-weight: 600;
+  }
+
+  #report-text {
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0 0 20px;
+  }
+
+  audio {
+    width: 100%;
+  }
+
+  .note {
+    font-size: 13px;
+    color: var(--warn);
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: rgba(227, 179, 65, 0.08);
+    border: 1px solid rgba(227, 179, 65, 0.25);
+    border-radius: 8px;
+    display: none;
+  }
+
+  .note.show { display: block; }
+
+  #error-box {
+    display: none;
+    color: #ff8080;
+    background: rgba(255, 100, 100, 0.08);
+    border: 1px solid rgba(255, 100, 100, 0.25);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 14px;
+    margin-top: 16px;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 30px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="eye-mark">👁️</div>
+      <h1>Third Eye</h1>
+      <p>Upload a photo — hear what's in front of you: scene, objects, text, and currency.</p>
+    </header>
+
+    <div class="card">
+      <div id="drop-zone">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 16V4M12 4l-4 4M12 4l4 4" />
+          <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+        </svg>
+        <p class="primary">Click to choose an image, or drag one here</p>
+        <p class="secondary">PNG, JPG, JPEG, WEBP — up to 16MB</p>
+      </div>
+      <input type="file" id="file-input" accept="image/*" />
+
+      <div class="status-row">
+        <span class="spinner" id="spinner"></span>
+        <span id="status-text"></span>
+      </div>
+
+      <div id="error-box"></div>
+
+      {% if not currency_available %}
+      <div class="note show">
+        Currency recognition is currently disabled — the trained model files weren't found in
+        the <code>/model</code> folder. Scene description, object detection, and text reading
+        still work normally. See README.md to enable currency detection.
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="card" id="result-card">
+      <img id="preview" alt="Uploaded image preview" />
+      <p class="report-label">Third Eye report</p>
+      <p id="report-text"></p>
+      <audio id="audio-player" controls></audio>
+    </div>
+
+    <footer>Built by Muhammad Adeel — Scene captioning (BLIP), object detection (YOLO11), OCR (EasyOCR), currency recognition (DenseNet121).</footer>
+  </div>
+
+<script>
+  const dropZone = document.getElementById("drop-zone");
+  const fileInput = document.getElementById("file-input");
+  const spinner = document.getElementById("spinner");
+  const statusText = document.getElementById("status-text");
+  const resultCard = document.getElementById("result-card");
+  const preview = document.getElementById("preview");
+  const reportText = document.getElementById("report-text");
+  const audioPlayer = document.getElementById("audio-player");
+  const errorBox = document.getElementById("error-box");
+
+  dropZone.addEventListener("click", () => fileInput.click());
+
+  dropZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropZone.classList.add("dragover");
+  });
+
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
+    if (e.dataTransfer.files.length) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files.length) {
+      handleFile(fileInput.files[0]);
+    }
+  });
+
+  function handleFile(file) {
+    errorBox.style.display = "none";
+    resultCard.style.display = "none";
+    spinner.classList.add("active");
+    statusText.textContent = "Analyzing image — this can take a few seconds...";
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    fetch("/predict", { method: "POST", body: formData })
+      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        spinner.classList.remove("active");
+        statusText.textContent = "";
+
+        if (!ok) {
+          errorBox.textContent = data.error || "Something went wrong.";
+          errorBox.style.display = "block";
+          return;
+        }
+
+        preview.src = data.image_url;
+        reportText.textContent = data.report;
+        audioPlayer.src = data.audio_url;
+        resultCard.style.display = "block";
+        audioPlayer.play().catch(() => {});
+      })
+      .catch((err) => {
+        spinner.classList.remove("active");
+        statusText.textContent = "";
+        errorBox.textContent = "Network or server error: " + err;
+        errorBox.style.display = "block";
+      });
+  }
+</script>
+</body>
+</html>

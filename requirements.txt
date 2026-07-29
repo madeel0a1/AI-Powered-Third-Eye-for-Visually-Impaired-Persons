@@ -1,0 +1,9 @@
+streamlit
+torch
+torchvision
+transformers
+easyocr
+ultralytics
+gTTS
+Pillow
+numpy
